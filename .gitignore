@@ -1,0 +1,13 @@
+# Ambientes Virtuais
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Ficheiros de Estado e Logs locais
+todo_list.json
+.DS_Store
+
+# (O ficheiro treino_diario.jsonl já está no disco D, mas por via das dúvidas)
+*.jsonl
+*.log
