@@ -1,24 +1,24 @@
 import os
 
-# --- MODELO & PERFORMANCE ---
-MODEL_NAME = "qwen2.5-coder:32b-instruct-q4_K_M"
+# --- MODELO ---
+MODEL_NAME = "ServiceNow-AI/Apriel-1.6-15b-Thinker:Q4_K_M"
 OLLAMA_URL = "http://localhost:11434/v1"
 OLLAMA_KEY = "ollama"
 
-# LIMITADORES (Para não estourar a VRAM de 24GB)
-MAX_CONTEXT = 8192  # 8k tokens garante que cabe na VRAM
-TEMPERATURE = 0.6
+# --- CAMINHOS ATUALIZADOS (Dados_Fedora) ---
+USER = os.environ.get('USER', 'user')
 
-# --- CAMINHOS ---
-USER = os.environ.get('USER')
-BASE_STORAGE = f"/run/media/{USER}/IA_Treinos"
+# Caminho Base correto
+BASE_STORAGE = f"/run/media/{USER}/Dados_Fedora/IA_Empire"
 
-# Banco Vetorial (Memória de Longo Prazo)
-VECTOR_DB_PATH = os.path.join(BASE_STORAGE, "chromadb_store")
-
-# Logs de Treino
+# Subpastas
 DATASET_DIR = os.path.join(BASE_STORAGE, "datasets")
-DATASET_FILE = os.path.join(DATASET_DIR, "treino_diario.jsonl")
+LOGS_DIR = os.path.join(BASE_STORAGE, "logs")
+CHATS_DIR = os.path.join(BASE_STORAGE, "conversas_salvas")
+OLLAMA_DIR = os.path.join(BASE_STORAGE, "ollama_models")
 
-# Arquivos locais do Sistema
-LOCAL_TODO_FILE = "kanban_data.json" # Mudamos para formato Kanban
+# Memória Global
+MEMORY_FILE = os.path.join(BASE_STORAGE, "global_memory.json")
+
+# Caminho local
+LOCAL_TODO_FILE = "todo_list.json"

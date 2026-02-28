@@ -1,60 +1,38 @@
 import streamlit as st
 import uuid
-from src.services.data_handler import load_todos
+from src.services.data_handler import load_todos, load_all_chats
 
-# 1. Configuração da Página
-st.set_page_config(
-    layout="wide", 
-    page_title="Ciclo IA - Workspace",
-    page_icon="🧿",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(layout="wide", page_title="Neural Center", page_icon="🧿")
 
-# 2. Estado da Sessão
 if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = {"Sessão Principal": []}
+    saved = load_all_chats()
+    st.session_state.chat_sessions = saved if saved else {"default": {"title": "Sessão Inicial", "messages": []}}
+
 if "current_session" not in st.session_state:
-    st.session_state.current_session = "Sessão Principal"
+    st.session_state.current_session = "default"
+
 if "todos" not in st.session_state:
     st.session_state.todos = load_todos()
 
-# 3. Barra Lateral (Azure Style)
 with st.sidebar:
-    st.markdown("### 🧿 Workspace IA")
-    st.caption("v1.0.0-beta | Cluster: Local (7900 XTX)")
+    st.title("🧿 Workspace")
+    page = st.radio("MENU", options=["💬 Chat", "📋 Kanban", "📚 RAG", "⚙️ Config"])
     st.divider()
-    
-    # Navegação
-    page = st.radio(
-        "MÓDULOS",
-        options=[
-            "💬 Chat & Copilot", 
-            "📋 Kanban & Sprints", 
-            "📚 Knowledge Base (RAG)", 
-            "⚙️ Model Configs",
-            "📅 Calendário"
-        ]
-    )
-    
-    st.divider()
-    
-    st.markdown("#### 🗂️ Histórico de Chats")
     if st.button("➕ Nova Conversa", use_container_width=True):
-        new_id = f"Chat {len(st.session_state.chat_sessions) + 1}"
-        st.session_state.chat_sessions[new_id] = []
+        new_id = str(uuid.uuid4())
+        st.session_state.chat_sessions[new_id] = {"title": "Conversa Vazia", "messages": []}
         st.session_state.current_session = new_id
         st.rerun()
-        
-    for session_id in reversed(list(st.session_state.chat_sessions.keys())):
-        active = (session_id == st.session_state.current_session)
-        if st.button(session_id, key=f"btn_{session_id}", use_container_width=True, type="primary" if active else "secondary"):
-            st.session_state.current_session = session_id
+    st.subheader("Histórico")
+    for sid, data in reversed(list(st.session_state.chat_sessions.items())):
+        is_active = (sid == st.session_state.current_session)
+        if st.button(data.get("title", "Sem título"), key=f"btn_{sid}", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.current_session = sid
             st.rerun()
 
-# 4. Roteamento
-if page == "💬 Chat & Copilot":
+if page == "💬 Chat":
     from src.ui.chat import render_chat
     render_chat()
 else:
     st.title(page)
-    st.info("Módulo em fase de integração de agentes.")
+    st.info("Módulo em desenvolvimento.")
