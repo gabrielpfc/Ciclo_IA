@@ -1,18 +1,30 @@
+import os
 import traceback
 from openai import OpenAI
 from src.config import OLLAMA_URL, OLLAMA_KEY, MODEL_NAME
 from src.services.telemetry import Profiler
-from src.services.memory_manager import get_relevant_memory, save_fact
+from src.services.memory_manager import get_relevant_memory
 
 client = OpenAI(base_url=OLLAMA_URL, api_key=OLLAMA_KEY)
 profiler = Profiler()
 
+def get_system_code_context():
+    """Lê o código fonte do próprio sistema para dar auto-consciência ao LLM."""
+    code_context = "\n--- AUTO-CONSCIÊNCIA DO MEU CÓDIGO FONTE ---\n"
+    src_path = "src"
+    try:
+        for root, dirs, files in os.walk(src_path):
+            for file in files:
+                if file.endswith(".py"):
+                    with open(os.path.join(root, file), "r", encoding="utf-8") as f:
+                        code_context += f"\nFILE: {file}\n{f.read()}\n"
+        return code_context
+    except: return ""
+
 def generate_title(messages):
     try:
-        # Pega apenas texto
         last_content = messages[-1]['content']
-        text_content = last_content if isinstance(last_content, str) else "Imagem"
-        
+        text_content = last_content if isinstance(last_content, str) else "Multimodal"
         res = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": f"Título curto (3 palavras) para: {text_content[:100]}"}],
@@ -21,24 +33,14 @@ def generate_title(messages):
         return res.choices[0].message.content.strip().replace('"', '')
     except: return None
 
-def get_response(messages, system_instruction, temperature=0.7, images_base64=None):
-    last_user_msg_content = messages[-1]["content"]
+def get_response(messages, system_instruction, temperature=0.7, images_base64=None, predict_tokens=2048):
+    # Injeta a auto-consciência
+    system_instruction += get_system_code_context()
     
-    # Tratamento Multimodal
-    if images_base64:
-        content_payload = [{"type": "text", "text": last_user_msg_content}]
-        for img_b64 in images_base64:
-            content_payload.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
-            })
-        messages[-1]["content"] = content_payload
-    
-    # Injeção de Memória
-    text_for_memory = last_user_msg_content if isinstance(last_user_msg_content, str) else "Multimodal"
-    long_term_memory = get_relevant_memory(text_for_memory)
-    if long_term_memory:
-        system_instruction += f"\n\n{long_term_memory}"
+    # Memória de longo prazo
+    last_msg = messages[-1]["content"]
+    long_term = get_relevant_memory(str(last_msg))
+    if long_term: system_instruction += f"\n\n{long_term}"
 
     profiler.start()
     try:
@@ -48,28 +50,16 @@ def get_response(messages, system_instruction, temperature=0.7, images_base64=No
             temperature=temperature,
             extra_body={
                 "options": {
-                    "num_ctx": 100000,       # 100k Contexto
-                    "num_gpu": -1,           # Força GPU
-                    "kv_cache_type": "q8_0", # Cache Otimizado
+                    "num_ctx": 32768,        # 32k confortável para a 15B
+                    "num_gpu": -1, 
+                    "kv_cache_type": "q8_0", 
                     "f16_kv": False,
-                    "num_predict": -1        # -1 = Infinito (até o modelo parar ou encher o contexto)
+                    "num_predict": predict_tokens 
                 }
             }
         )
         ai_msg = response.choices[0].message.content
-        
-        # Lógica de Captura de Nome Melhorada
-        if isinstance(last_user_msg_content, str):
-            lower_msg = last_user_msg_content.lower()
-            if "meu nome é" in lower_msg or "chamo-me" in lower_msg or "chamo me" in lower_msg:
-                # Tenta extrair o nome de forma tosca mas eficaz
-                parts = lower_msg.replace("meu nome é", "").replace("chamo-me", "").strip().split()
-                if parts:
-                    save_fact("nome", parts[0].capitalize())
-
-        elapsed, log_file = profiler.stop_and_save(str(text_for_memory)[:50], ai_msg)
+        elapsed, log_file = profiler.stop_and_save("Prompt", ai_msg)
         return ai_msg, elapsed, log_file
-    
     except Exception as e:
-        profiler.stop_and_save("ERRO", f"ERRO: {str(e)}")
         return f"ERRO: {str(e)}", 0, ""

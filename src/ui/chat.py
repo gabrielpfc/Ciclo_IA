@@ -1,105 +1,58 @@
 import streamlit as st
-import json
-import base64
-import fitz
-from src.services.llm_engine import get_response, generate_title
-from src.services.data_handler import log_interaction_for_training, save_chat_session
-from src.services.memory_manager import load_memory, save_fact
-
-def process_uploaded_files(uploaded_files):
-    images_b64 = []
-    text_context = ""
-    for file in uploaded_files:
-        if file.type.startswith('image'):
-            bytes_data = file.getvalue()
-            b64 = base64.b64encode(bytes_data).decode('utf-8')
-            images_b64.append(b64)
-        elif file.type == "application/pdf":
-            doc = fitz.open(stream=file.read(), filetype="pdf")
-            for page in doc: text_context += page.get_text()
-        else:
-            text_context += file.getvalue().decode("utf-8")
-    return images_b64, text_context
+import os
+from src.ui.styles import inject_chat_css
+from src.logic.chat_processor import handle_input
 
 def render_chat():
+    inject_chat_css()
+    
     session_id = st.session_state.current_session
     session_data = st.session_state.chat_sessions[session_id]
     messages = session_data["messages"]
 
-    # --- BARRA LATERAL EXTRA ---
-    with st.sidebar:
-        st.divider()
-        st.markdown("### 🧠 Memória de Longo Prazo")
-        memory_data = load_memory()
-        
-        # Visualizador de Memória
-        if memory_data:
-            st.json(memory_data, expanded=False)
-        else:
-            st.info("Ainda não sei nada sobre você.")
-            
-        # Injetor Manual de Fatos
-        with st.popover("➕ Adicionar Fato"):
-            new_key = st.text_input("Chave (ex: projeto)")
-            new_val = st.text_input("Valor (ex: RPG Godot)")
-            if st.button("Salvar Memória"):
-                save_fact(new_key, new_val)
-                st.success("Salvo!")
-                st.rerun()
-
-        st.divider()
-        with st.expander("📎 Anexos (RAG/Vision)"):
-            uploaded_files = st.file_uploader("Arquivos", accept_multiple_files=True)
-
-    # --- CHAT PRINCIPAL ---
-    col1, col2 = st.columns([0.8, 0.2])
-    col1.title(f"💬 {session_data.get('title', 'Chat')}")
-    if col2.button("Limpar"):
+    # --- CABEÇALHO ---
+    c1, c2 = st.columns([0.9, 0.1])
+    c1.subheader(f"🇬🇧 {session_data.get('title', 'English Tutor')}")
+    if c2.button("🗑️", help="Limpar"):
         st.session_state.chat_sessions[session_id]["messages"] = []
         st.rerun()
 
-    # System Prompt Dinâmico
-    system_instruction = """
-Você é o Apriel-15B.
-HARDWARE: AMD 7900 XTX (24GB).
-OBJETIVO: Ser o melhor assistente de engenharia e criatividade.
-ESTILO: Respostas completas e detalhadas. Se for pedido um texto longo (livro/artigo), escreva extensivamente.
-"""
-
-    for msg in messages:
-        with st.chat_message(msg["role"]):
-            if isinstance(msg["content"], list):
-                st.markdown(msg["content"][0]["text"])
-                st.caption("📷 [Imagem Analisada]")
-            else:
+    # --- HISTÓRICO ---
+    chat_container = st.container(height=650)
+    with chat_container:
+        if not messages:
+            st.info("🎙️ Press the microphone below to start speaking.")
+            
+        for msg in messages:
+            with st.chat_message(msg["role"]):
+                # Áudio primeiro
+                if "audio_path" in msg and msg["audio_path"] and os.path.exists(msg["audio_path"]):
+                    st.audio(msg["audio_path"], format="audio/wav")
+                # Texto depois
                 st.markdown(msg["content"])
 
-    if prompt := st.chat_input("Comando..."):
-        images_b64 = []
-        doc_text = ""
+    # --- BARRA DE COMANDO ---
+    st.markdown('<div class="fixed-footer">', unsafe_allow_html=True)
+    c_txt, c_mic, c_clip, c_send = st.columns([0.7, 0.1, 0.1, 0.1])
+
+    with c_txt:
+        # Hack para detetar Enter: usamos key dinâmico ou form
+        text_val = st.text_input("Msg", placeholder="Type here...", label_visibility="collapsed", key="txt_input")
+    
+    with c_mic:
+        audio_val = st.audio_input("Mic", label_visibility="collapsed")
         
-        if uploaded_files:
-            images_b64, doc_text = process_uploaded_files(uploaded_files)
-            if doc_text: prompt += f"\n\n[CONTEXTO ARQUIVOS]:\n{doc_text}"
+    with c_clip:
+        if st.button("📎"): st.toast("Arraste ficheiros para a barra lateral", icon="ℹ️")
+        
+    with c_send:
+        send_clicked = st.button("➤", type="primary", use_container_width=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-            if images_b64: st.image(uploaded_files[0], width=200)
-
-        with st.spinner("Gerando (Max Tokens)..."):
-            ai_msg, elapsed, log = get_response(messages, system_instruction, images_base64=images_b64)
-            
-        messages.append({"role": "assistant", "content": ai_msg})
-        with st.chat_message("assistant"):
-            st.markdown(ai_msg)
-            if elapsed: st.caption(f"⏱️ {elapsed}s")
-
-        # Gerar Título na primeira msg
-        if len(messages) <= 2:
-            new_title = generate_title(messages)
-            if new_title: st.session_state.chat_sessions[session_id]["title"] = new_title
-
-        save_chat_session(session_id, session_data.get("title", "Chat"), messages)
-        log_interaction_for_training(prompt, ai_msg, "Multimodal")
-        st.rerun()
+    # --- GATILHO DE LÓGICA ---
+    # Se houver áudio ou texto+botão, chama o processador
+    if audio_val or (send_clicked and text_val):
+        success = handle_input(session_id, messages, text_input=text_val, audio_input=audio_val)
+        if success:
+            st.rerun()
