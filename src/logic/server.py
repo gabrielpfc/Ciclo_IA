@@ -89,7 +89,7 @@ def chat_endpoint(req: ChatRequest):
         logger.info(f"🧠 Enviando prompt para o Ollama ({OLLAMA_CHAT_URL})...")
         
         try:
-            with requests.post(OLLAMA_CHAT_URL, json=payload, stream=True, timeout=10) as r:
+            with requests.post(OLLAMA_CHAT_URL, json=payload, stream=True, timeout=120) as r:
                 if r.status_code != 200:
                     logger.error(f"❌ Ollama recusou: HTTP {r.status_code} - {r.text}")
                     yield f"\n❌[ERRO BACKEND]: O Ollama recusou a conexão. Código: {r.status_code}"

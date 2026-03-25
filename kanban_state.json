@@ -3,31 +3,8 @@
     {
       "id": "sprint-1",
       "name": "Sprint 1: MVP",
-      "createdAt": 1774456040005
+      "createdAt": 1774456810997
     }
   ],
-  "tasks": [
-    {
-      "id": "1",
-      "title": "Refatorar UI/UX",
-      "status": "doing",
-      "description": "Melhorar a interface do Neural OS",
-      "sprintIds": [
-        "sprint-1"
-      ],
-      "createdAt": 1774456040005,
-      "order": 0
-    },
-    {
-      "id": "2",
-      "title": "Integrar Gemini",
-      "status": "todo",
-      "description": "Substituir Ollama por Gemini API",
-      "sprintIds": [
-        "sprint-1"
-      ],
-      "createdAt": 1774456040005,
-      "order": 1
-    }
-  ]
+  "tasks": []
 }
