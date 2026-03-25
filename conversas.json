@@ -1,0 +1,29 @@
+[
+  {
+    "id": "default",
+    "title": "Sessão Inicial",
+    "messages": [
+      {
+        "id": "0.8546113597572352",
+        "role": "user",
+        "content": "ola amigo"
+      },
+      {
+        "id": "0.4076695117000405",
+        "role": "assistant",
+        "content": "## 👋 Olá!\n\n### Saudações\nOi, amigo! Tudo bem com você?\n\n### Como posso ajudar?\n- **Responder dúvidas** sobre qualquer assunto (ciência, tecnologia, cultura, etc.).\n- **Fornecer informações** detalhadas e confiáveis.\n- **Auxiliar na redação** de textos, emails, artigos ou posts.\n- **Gerar ideias** criativas para projetos, estudos ou diversão.\n\nSe quiser saber algo específico ou precisar de ajuda em algum tema, é só me dizer! 😊\n"
+      },
+      {
+        "id": "0.7265719490385666",
+        "role": "user",
+        "content": "como vc esta?"
+      },
+      {
+        "id": "0.07627799066168306",
+        "role": "assistant",
+        "content": "I’m doing well, thank you! How about you? In English you’d ask “How are you?” instead of “como vc está.”\n"
+      }
+    ],
+    "lastUpdate": "2026-03-25T17:24:56.029Z"
+  }
+]
