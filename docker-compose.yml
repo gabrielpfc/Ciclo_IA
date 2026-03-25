@@ -1,0 +1,17 @@
+services:
+  neural_os:
+    build: .
+    container_name: ciclo_ia_container
+    network_mode: "host"
+    volumes:
+      - .:/app
+      - /run/media/user/Dados_Fedora/IA_Empire:/run/media/user/Dados_Fedora/IA_Empire
+      - /run/user/1000/pulse:/run/user/1000/pulse
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    environment:
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      - USER=${USER}
+    privileged: true
+    restart: unless-stopped

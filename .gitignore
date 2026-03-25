@@ -1,13 +1,29 @@
-# Ambientes Virtuais
+# --- Python & Ambiente ---
 venv/
 env/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Ficheiros de Estado e Logs locais
+# --- Ficheiros Temporários e Binários (IA) ---
+*.wav
+*.mp3
+static_audio/
+temp_rec_*.wav
+models/
+bin/
+
+# --- Estado e Dados Locais ---
 todo_list.json
-.DS_Store
-
-# (O ficheiro treino_diario.jsonl já está no disco D, mas por via das dúvidas)
 *.jsonl
 *.log
+.DS_Store
+
+# --- Docker ---
+.dockerenv
+
+# --- Armazenamento Externo (Proteção) ---
+# Caso tenhas criado algum link simbólico para o disco externo
+storage/
+IA_Empire/

@@ -1,0 +1,9 @@
+streamlit
+openai
+faster-whisper
+chromadb
+PyMuPDF
+pytesseract
+Pillow
+psutil
+python-dotenv

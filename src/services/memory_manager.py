@@ -1,45 +1,41 @@
 import json
 import os
-from src.config import MEMORY_FILE
+from src.config import MEMORY_FILE, KANBAN_DATA_PATH
 
 def load_memory():
     if os.path.exists(MEMORY_FILE):
         try:
-            with open(MEMORY_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+            with open(MEMORY_FILE, "r", encoding="utf-8") as f: return json.load(f)
         except: return {}
     return {}
 
-def save_fact(key, value):
-    memory = load_memory()
-    memory[key] = value
-    # Garante que a pasta existe
-    os.makedirs(os.path.dirname(MEMORY_FILE), exist_ok=True)
-    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(memory, f, indent=4, ensure_ascii=False)
-
 def get_relevant_memory(prompt):
     memory = load_memory()
-    relevant = []
-    
-    # Se a memória estiver vazia, retorna nada
-    if not memory: return ""
-
-    # Palavras-chave para ativar memórias específicas
-    triggers = {
-        "nome": ["nome", "chamo", "quem sou"],
-        "hardware": ["gpu", "pc", "specs", "sistema"],
-        "projeto": ["jogo", "godot", "tcg", "app"]
-    }
-    
-    prompt_lower = prompt.lower()
-    
-    # Estratégia: Se o prompt for curto ou genérico, injeta TUDO (pois cabe no contexto de 100k)
-    # Se for muito específico, filtra.
-    # Dado que temos 100k, vamos injetar a memória PRINCIPAL sempre.
-    
-    context_str = "FATOS CONHECIDOS SOBRE O UTILIZADOR:\n"
+    context_str = "--- FATOS CONHECIDOS ---\n"
     for k, v in memory.items():
         context_str += f"- {k.upper()}: {v}\n"
+    
+    # Injeta resumo do Kanban estruturado
+    if os.path.exists(KANBAN_DATA_PATH):
+        try:
+            with open(KANBAN_DATA_PATH, "r", encoding="utf-8") as f:
+                kb = json.load(f)
+                tasks = kb.get('tasks', [])
+                context_str += f"\n--- ESTADO DO KANBAN (NEURAL OS) ---\n"
+                context_str += f"Total de tarefas ativas: {len(tasks)}\n"
+                
+                # Agrupar por status para dar melhor contexto à IA
+                status_map = {}
+                for t in tasks:
+                    st = t.get('status', 'unknown')
+                    if st not in status_map: status_map[st] = []
+                    status_map[st].append(t['title'])
+                
+                for st, t_list in status_map.items():
+                    context_str += f"[{st.upper()}]: {', '.join(t_list)}\n"
+                    
+                context_str += "Usa esta informação para ajudar o utilizador a gerir o seu tempo e prioridades.\n"
+        except Exception as e: 
+            print(f"Erro ao ler Kanban: {e}")
         
     return context_str

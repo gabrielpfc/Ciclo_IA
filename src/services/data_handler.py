@@ -37,3 +37,11 @@ def log_interaction_for_training(user, ai, context):
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception as e:
         print(f"ERRO AO SALVAR DATASET: {e}")
+
+def delete_chat_session(session_id):
+    """Apaga o ficheiro físico da conversa."""
+    import os
+    from src.config import CHATS_DIR
+    file_path = os.path.join(CHATS_DIR, f"{session_id}.json")
+    if os.path.exists(file_path):
+        os.remove(file_path)
