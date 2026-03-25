@@ -18,11 +18,12 @@ export default defineConfig(({mode}) => {
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: {
-        // O SEGREDO ESTÁ AQUI: O Vite fica cego para a Base de Dados e Logs
-        ignored:[
-          '**/*.log', 
-          '**/vagas_vistas.json', 
-          '**/kanban_state.json', 
+        // IGNORAR FICHEIROS QUE CAUSAM REFRESH INFINITO
+        ignored: [
+          '**/neural_os.log',
+          '**/conversas.json',
+          '**/kanban_state.json',
+          '**/vagas_vistas.json',
           '**/todo_list.json'
         ]
       }

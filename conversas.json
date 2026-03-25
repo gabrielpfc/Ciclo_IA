@@ -22,6 +22,36 @@
         "id": "0.07627799066168306",
         "role": "assistant",
         "content": "I’m doing well, thank you! How about you? In English you’d ask “How are you?” instead of “como vc está.”\n"
+      },
+      {
+        "id": "0.28109241871303725",
+        "role": "user",
+        "content": "ta tudo bem amigo?"
+      },
+      {
+        "id": "0.9152550171449135",
+        "role": "assistant",
+        "content": "❌ Erro Ollama: HTTPConnectionPool(host='127.0.0.1', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=11434): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+      },
+      {
+        "id": "0.336333933175325",
+        "role": "user",
+        "content": "ola"
+      },
+      {
+        "id": "0.6717664065679122",
+        "role": "assistant",
+        "content": "❌ Erro Ollama: HTTPConnectionPool(host='127.0.0.1', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=11434): Failed to establish a new connection: [Errno 111] Connection refused\"))"
+      },
+      {
+        "id": "0.07984722906961661",
+        "role": "user",
+        "content": "oi"
+      },
+      {
+        "id": "0.49142034256094647",
+        "role": "assistant",
+        "content": "Oi! Tudo bem?\n"
       }
     ],
     "lastUpdate": "2026-03-25T17:24:56.029Z"
