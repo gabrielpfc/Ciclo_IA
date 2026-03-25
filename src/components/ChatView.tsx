@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Mic, Bot, Paperclip, X, Check, Copy, Terminal } from 'lucide-react';
 import { ChatSession, Todo, KanbanTask } from '../types';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Droppable } from '@hello-pangea/dnd';
 
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
@@ -71,7 +72,7 @@ export default function ChatView({ session, setSessions, todos, tasks, taskToIns
     let contextStr = "--- TAREFAS ---\n";
     tasks.forEach(t => contextStr += `[${t.status}]: ${t.title}\n`);
     
-    const systemInstruction = `ROLE: Neural OS.\nResponde de forma detalhada.\n\n${contextStr}`;
+    const systemInstruction = `ROLE: Neural OS.\nResponde de forma detalhada e visualmente bem estruturada. Usa SEMPRE formatação Markdown (tabelas, listas, negrito) e faz quebras de linha duplas para separar parágrafos e ideias.\n\n${contextStr}`;
 
     try {
       const formattedMessages = newMessages.map(m => ({
@@ -99,7 +100,7 @@ export default function ChatView({ session, setSessions, todos, tasks, taskToIns
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
-          aiResponse += decoder.decode(value);
+          aiResponse += decoder.decode(value, { stream: true });
           setSessions(prev => prev.map(s => {
             if (s.id === session.id) {
               const msgs = [...s.messages];
@@ -140,7 +141,7 @@ export default function ChatView({ session, setSessions, todos, tasks, taskToIns
             session.messages.map((msg) => (
               <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`relative max-w-[85%] px-6 py-5 shadow-md ${msg.role === 'user' ? 'bg-slate-800 text-slate-200 rounded-2xl rounded-br-sm' : 'bg-black border-l-4 border-blue-500 text-slate-200 rounded-2xl rounded-bl-sm'}`}>
-                  <ReactMarkdown components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{msg.content}</ReactMarkdown>
                 </div>
               </div>
             ))
