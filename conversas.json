@@ -1,5 +1,41 @@
 [
   {
+    "id": "jgh8ae",
+    "title": "Nova Conversa",
+    "messages": [
+      {
+        "id": "0.34696902758132675",
+        "role": "user",
+        "content": "testando de novo",
+        "imagePreview": null
+      },
+      {
+        "id": "0.6115926293078613",
+        "role": "assistant",
+        "content": "Your phrase translates to English as “Testing again.”\n"
+      }
+    ],
+    "lastUpdate": "2026-03-26T00:36:10.619Z"
+  },
+  {
+    "id": "okk1sh",
+    "title": "Nova Conversa",
+    "messages": [
+      {
+        "id": "0.4387373296683116",
+        "role": "user",
+        "content": "testando a nova conversa",
+        "imagePreview": null
+      },
+      {
+        "id": "0.27234988344495326",
+        "role": "assistant",
+        "content": "Hello! It appears you wrote a Portuguese phrase (“testando a nova conversa”). If you’d like me to check your English, please type an English sentence.\n"
+      }
+    ],
+    "lastUpdate": "2026-03-26T00:35:54.422Z"
+  },
+  {
     "id": "default",
     "title": "Sessão Inicial",
     "messages": [
@@ -52,6 +88,39 @@
         "id": "0.49142034256094647",
         "role": "assistant",
         "content": "Oi! Tudo bem?\n"
+      },
+      {
+        "id": "0.6644920921482356",
+        "role": "user",
+        "content": "tudo sim e contigo?",
+        "imagePreview": null
+      },
+      {
+        "id": "0.9265593106688779",
+        "role": "assistant",
+        "content": "Tudo bem por aqui, e contigo?\n"
+      },
+      {
+        "id": "0.40430832289805885",
+        "role": "user",
+        "content": "consegue help me with my english?",
+        "imagePreview": null
+      },
+      {
+        "id": "0.7553383944268507",
+        "role": "assistant",
+        "content": "Certainly! I’m happy to help you improve your English. Please write your sentences or questions in English, and I’ll correct any mistakes for you.\n"
+      },
+      {
+        "id": "0.9429425619298133",
+        "role": "user",
+        "content": "entao ja podia ter começado",
+        "imagePreview": null
+      },
+      {
+        "id": "0.6751587986791393",
+        "role": "assistant",
+        "content": "Certainly! Your sentence “então já podia ter começado” could be expressed in English as:\n\n- **“Then it could have started already.”**  \n- Or more naturally, **“It should have started by then.”**\n\nIf you’d like further help, please write your sentences in English and I’ll correct any errors.\n"
       }
     ],
     "lastUpdate": "2026-03-25T17:24:56.029Z"

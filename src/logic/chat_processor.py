@@ -3,6 +3,7 @@ import time
 import os
 import re
 import json
+import threading
 from src.services.llm_engine import get_response_stream
 from src.services.voice_engine import generate_speech
 from src.services.stt_engine import transcribe_audio
@@ -16,7 +17,6 @@ def resolve_mentions(text):
     try:
         with open(KANBAN_DATA_PATH, "r") as f: data = json.load(f)
         
-        # Encontra padrões #[TIPO:ID]
         mentions = re.findall(r'#\[(TASK|SPRINT):(.*?)\]', text)
         enriched_text = text
         
@@ -62,27 +62,52 @@ def handle_input(session_id, messages, text_input=None, audio_input=None, ui_con
     if user_audio_path: msg_data["audio_path"] = user_audio_path
     messages.append(msg_data)
     
-    # 3. GERAR RESPOSTA DO LLM
+    # 3. GERAR RESPOSTA DO LLM (COM TTS SIMULTÂNEO)
     sys_inst = "ROLE: Neural OS. Responde em Português." if not is_voice_mode else "ROLE: English Tutor. Speak English."
+    
+    ai_msg = ""
     
     with ui_container:
         with st.chat_message("assistant"):
-            # Enviamos o prompt ENRIQUECIDO, mas guardamos o original no histórico visual
             llm_messages = messages[:-1] + [{"role": "user", "content": enriched_prompt}]
             stream = get_response_stream(llm_messages, sys_inst)
-            ai_msg = st.write_stream(stream)
+            
+            # Criamos um placeholder vazio para atualizar o texto em tempo real
+            message_placeholder = st.empty()
+            last_processed_length = 0
+            
+            for chunk in stream:
+                ai_msg += chunk
+                # Atualiza a UI com o texto a ser gerado e um cursor visual
+                message_placeholder.markdown(ai_msg + "▌")
+                
+                # Se estivermos em modo voz, processamos o TTS em pedaços (frases)
+                if is_voice_mode:
+                    unprocessed_text = ai_msg[last_processed_length:]
+                    # Procura por frases completas terminadas em ponto, exclamação, interrogação ou quebra de linha
+                    match = re.search(r'.*?[.!?\n]+', unprocessed_text)
+                    if match:
+                        sentence = match.group(0)
+                        if sentence.strip():
+                            # Dispara a geração e reprodução de áudio em uma Thread separada para não travar a UI
+                            threading.Thread(target=generate_speech, args=(sentence.strip(), "en"), daemon=True).start()
+                        last_processed_length += len(sentence)
 
-    # 4. GERAR VOZ (TTS)
-    ai_audio_path = None
-    if is_voice_mode:
-        with st.spinner("🗣️ A gerar voz..."):
-            ai_audio_path = generate_speech(ai_msg, lang="en")
+            # Remove o cursor visual no final
+            message_placeholder.markdown(ai_msg)
+            
+            # Processa qualquer resto de texto que não terminou em pontuação
+            if is_voice_mode and last_processed_length < len(ai_msg):
+                remaining_text = ai_msg[last_processed_length:].strip()
+                if remaining_text:
+                    threading.Thread(target=generate_speech, args=(remaining_text, "en"), daemon=True).start()
 
     # Guardar resposta da IA
     ai_data = {"role": "assistant", "content": ai_msg}
-    if ai_audio_path: ai_data["audio_path"] = ai_audio_path
     messages.append(ai_data)
 
+    # Atualizar estado e salvar
     st.session_state.chat_sessions[session_id]["messages"] = messages
     save_chat_session(session_id, st.session_state.chat_sessions[session_id]["title"], messages)
+    
     return True

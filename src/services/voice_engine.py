@@ -2,21 +2,26 @@ import os
 import subprocess
 import time
 import threading
+import queue
 
-def play_audio_local(file_path):
-    """Toca o áudio diretamente no Linux (Auto-Play) em background"""
-    def _play():
+audio_queue = queue.Queue()
+
+def _audio_worker():
+    while True:
+        file_path = audio_queue.get()
+        if file_path is None: break
         try:
-            # Tenta paplay (PulseAudio - Melhor qualidade) ou aplay (ALSA - Padrão)
+            # Fedora usa PipeWire, paplay é mais robusto que aplay
             subprocess.run(f"paplay {file_path} || aplay {file_path}", shell=True, check=False)
         except Exception as e:
-            print(f"Erro ao tocar áudio: {e}")
-            
-    # Roda em thread separada para não travar a UI enquanto fala
-    threading.Thread(target=_play).start()
+            print(f"Erro áudio: {e}")
+        finally:
+            audio_queue.task_done()
+
+threading.Thread(target=_audio_worker, daemon=True).start()
 
 def generate_speech(text, lang="en"):
-    project_root = os.getcwd()
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
     piper_bin = os.path.join(project_root, "bin/piper/piper/piper")
     
     voices = {
@@ -24,25 +29,23 @@ def generate_speech(text, lang="en"):
         "pt": "pt_PT-tugão-medium.onnx"
     }
     
-    model_name = voices.get(lang, voices["en"])
-    model_path = os.path.join(project_root, "models/tts", model_name)
+    model_path = os.path.join(project_root, "models/tts", voices.get(lang, voices["en"]))
+    out_dir = os.path.join(project_root, "static_audio")
+    os.makedirs(out_dir, exist_ok=True)
     
-    # Nome único para evitar cache de browser
-    output_filename = f"speech_{int(time.time())}.wav"
-    output_path = os.path.join(project_root, "static_audio", output_filename)
-    
-    # Garante que a pasta existe (Streamlit precisa de pasta estática às vezes, mas aqui usamos caminho absoluto)
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
-    command = f'echo "{text}" | {piper_bin} --model {model_path} --output_file {output_path}'
+    output_wav = os.path.join(out_dir, f"speech_{int(time.time()*1000)}.wav")
     
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        # Comando limpo usando pipe do python
+        process = subprocess.Popen(
+            [piper_bin, "--model", model_path, "--output_file", output_wav],
+            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+        )
+        process.communicate(input=text.encode("utf-8"))
         
-        # --- AUTO PLAY IMEDIATO ---
-        play_audio_local(output_path)
-        
-        return output_path
+        if os.path.exists(output_wav):
+            audio_queue.put(output_wav)
+            return output_wav
     except Exception as e:
-        print(f"Erro TTS: {e}")
-        return None
+        print(f"Falha Piper: {e}")
+    return None

@@ -17,38 +17,20 @@
   }
 }
 
-/* Estilização de Tabelas Markdown (Geradas pela IA) */
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.9rem;
-}
-.prose th, .prose td {
-  border: 1px solid #334155;
-  padding: 0.75rem 1rem;
-  text-align: left;
-}
-.prose th {
-  background-color: #1e293b;
-  color: #f8fafc;
-  font-weight: 600;
-}
-.prose tr:nth-child(even) {
-  background-color: rgba(15, 23, 42, 0.5);
-}
+.prose table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+.prose th, .prose td { border: 1px solid #334155; padding: 0.75rem 1rem; text-align: left; }
+.prose th { background-color: #1e293b; color: #f8fafc; font-weight: 600; }
+.prose tr:nth-child(even) { background-color: rgba(15, 23, 42, 0.5); }
 
-/* Ocultar scrollbar branca feia no Textarea */
-textarea::-webkit-scrollbar {
-  width: 8px;
+textarea::-webkit-scrollbar { width: 8px; }
+textarea::-webkit-scrollbar-track { background: transparent; }
+textarea::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
+textarea::-webkit-scrollbar-thumb:hover { background-color: #475569; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
 }
-textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-textarea::-webkit-scrollbar-thumb {
-  background-color: #334155;
-  border-radius: 10px;
-}
-textarea::-webkit-scrollbar-thumb:hover {
-  background-color: #475569;
+.animate-wave {
+  animation: wave 1s ease-in-out infinite;
 }
